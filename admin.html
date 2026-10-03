@@ -130,7 +130,6 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted)}
     </div>
 
     <div id="dashboard" class="section">
-      <div id="exportNotice" class="notice">data.json exported successfully.</div>
       <div class="stats">
         <div class="stat"><span>Total Students</span><strong id="studentCount">0</strong></div>
         <div class="stat"><span>Total Tasks</span><strong id="taskCount">0</strong></div>
@@ -138,13 +137,13 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted)}
         <div class="stat"><span>Completed Tasks</span><strong id="completedCount">0</strong></div>
       </div>
       <div class="card">
-        <h2>🔗 Shared Data Connection</h2>
-        <div id="connectionNotice" class="notice" style="display:block;background:#eef9ff;color:#176b99">Not connected yet. Click <b>Connect data.json</b> and choose the same <b>data.json</b> used by your public SolveOn site.</div>
-        <p style="color:var(--muted);margin-top:0">Once connected, changes you make here are written directly to <b>data.json</b>. Your main site reads that same file, so leaderboard and tasks stay synchronized without a database or admin login.</p>
-        <button class="primary" onclick="connectDataFile()">🔗 Connect data.json</button>
-        <button class="secondary" onclick="loadSharedData()">↻ Reload shared data</button>
-        <button class="secondary" onclick="downloadData()">⬇ Backup data.json</button>
-        <p id="fileStatus" style="margin:12px 0 0;color:var(--muted);font-size:13px">Use VS Code <b>Live Server</b> to run this admin page.</p>
+        <h2>🔥 Live Firebase Database Connection</h2>
+        <div id="connectionNotice" class="notice" style="display:block;background:#eef9ff;color:#176b99">
+          ● Connected to Firebase Firestore backend (`solveon-a0cf4`).
+        </div>
+        <p style="color:var(--muted);margin-top:0">
+          Changes made in this admin panel will sync in real-time across all devices reading the main website.
+        </p>
       </div>
       <div class="card">
         <h2>Quick Actions</h2>
@@ -184,7 +183,7 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted)}
               <textarea id="taskDescription" placeholder="Explain what students need to submit..."></textarea>
             </div>
           </div>
-          <button class="primary" type="submit">Publish Task</button>
+          <button class="primary" type="submit" style="margin-top:15px">Publish Task</button>
         </form>
       </div>
 
@@ -217,7 +216,7 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted)}
               <input id="studentPoints" type="number" min="0" value="0" required>
             </div>
           </div>
-          <button class="primary" type="submit">Save Student</button>
+          <button class="primary" type="submit" style="margin-top:15px">Save Student</button>
         </form>
       </div>
 
@@ -236,260 +235,197 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted)}
   </main>
 </div>
 
+<!-- Firebase Compatible SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <script>
-const TASK_KEY = "solveon_tasks";
-const STUDENT_KEY = "solveon_students";
-let tasks = [];
-let students = [];
-let dataFileHandle = null;
-
-function normalizeData(data){
-  return {
-    students: Array.isArray(data?.students) ? data.students : [],
-    tasks: Array.isArray(data?.tasks) ? data.tasks : [],
-    updatedAt: data?.updatedAt || new Date().toISOString()
+  const firebaseConfig = {
+    apiKey: "AIzaSyD6F7Y16vDy20HAlP2NFTXsz37_o8l_VZQ",
+    authDomain: "solveon-a0cf4.firebaseapp.com",
+    projectId: "solveon-a0cf4",
+    storageBucket: "solveon-a0cf4.firebasestorage.app",
+    messagingSenderId: "662833382074",
+    appId: "1:662833382074:web:a409e20c8c2b34669d3883",
+    measurementId: "G-Z59CBFNBM7"
   };
-}
 
-function setLocalBackup(){
-  localStorage.setItem(TASK_KEY, JSON.stringify(tasks));
-  localStorage.setItem(STUDENT_KEY, JSON.stringify(students));
-}
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
 
-function applyData(data){
-  const normalized = normalizeData(data);
-  students = normalized.students;
-  tasks = normalized.tasks;
-  setLocalBackup();
-  refresh();
-}
+  let state = {
+    students: [],
+    tasks: []
+  };
 
-async function loadSharedData(){
-  try{
-    const response = await fetch('data.json?v=' + Date.now(), {cache:'no-store'});
-    if(!response.ok) throw new Error('Could not load data.json');
-    const data = await response.json();
-    applyData(data);
-    setConnectionStatus('Shared data loaded. Connect the file below to enable direct saving.', false);
-  }catch(error){
-    // Fallback only for offline/local use.
-    try{
-      students = JSON.parse(localStorage.getItem(STUDENT_KEY) || '[]');
-      tasks = JSON.parse(localStorage.getItem(TASK_KEY) || '[]');
-      refresh();
-      setConnectionStatus('data.json could not be loaded. Run this page with Live Server.', true);
-    }catch(e){
-      setConnectionStatus('Could not load SolveOn data.', true);
+  // Real-time synchronization from Firebase
+  function initRealtimeSync() {
+    db.collection("solveon").doc("mainData")
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          state.students = Array.isArray(data.students) ? data.students : [];
+          state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
+          renderUI();
+        }
+      }, (error) => {
+        console.error("Firestore read error:", error);
+      });
+  }
+
+  // Save current state directly to Firebase
+  async function saveToFirebase() {
+    try {
+      await db.collection("solveon").doc("mainData").set({
+        students: state.students,
+        tasks: state.tasks,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      alert("❌ Save error: " + e.message);
     }
-    console.error(error);
   }
-}
 
-function setConnectionStatus(message, error=false){
-  const notice = document.getElementById('connectionNotice');
-  const status = document.getElementById('fileStatus');
-  if(notice){
-    notice.innerHTML = message;
-    notice.style.display = 'block';
-    notice.style.background = error ? '#fff3f3' : '#eef9ff';
-    notice.style.color = error ? '#a33' : '#176b99';
-  }
-  if(status){
-    status.innerHTML = dataFileHandle
-      ? '✅ Connected: <b>' + escapeHtml(dataFileHandle.name) + '</b> — changes save directly to this file.'
-      : 'Use VS Code <b>Live Server</b> to run this admin page.';
-  }
-}
+  function renderUI() {
+    // Stats calculation
+    document.getElementById('studentCount').textContent = state.students.length;
+    document.getElementById('taskCount').textContent = state.tasks.length;
+    
+    const totalPoints = state.students.reduce((acc, curr) => acc + (parseInt(curr.points) || 0), 0);
+    document.getElementById('pointCount').textContent = totalPoints;
 
-async function connectDataFile(){
-  if(!window.showOpenFilePicker){
-    setConnectionStatus('Your browser does not support direct file saving. Use Google Chrome or Microsoft Edge on your Mac.', true);
-    return;
-  }
-  try{
-    const [handle] = await window.showOpenFilePicker({
-      multiple:false,
-      types:[{description:'SolveOn shared data',accept:{'application/json':['.json']}}]
-    });
-    let permission = await handle.queryPermission({mode:'readwrite'});
-    if(permission !== 'granted') permission = await handle.requestPermission({mode:'readwrite'});
-    if(permission !== 'granted') throw new Error('Write permission was not granted.');
-
-    dataFileHandle = handle;
-    const file = await handle.getFile();
-    const data = JSON.parse(await file.text());
-    applyData(data);
-    setConnectionStatus('✅ Connected successfully. Admin changes will now save directly into the shared data.json file.', false);
-  }catch(error){
-    if(error?.name !== 'AbortError') setConnectionStatus('Connection failed: ' + escapeHtml(error.message), true);
-  }
-}
-
-async function saveData(){
-  const payload = {students, tasks, updatedAt:new Date().toISOString()};
-  setLocalBackup();
-  if(!dataFileHandle){
-    return false;
-  }
-  const writable = await dataFileHandle.createWritable();
-  await writable.write(JSON.stringify(payload, null, 2));
-  await writable.close();
-  setConnectionStatus('✅ Saved. The main SolveOn site will pick up the new leaderboard/tasks automatically.', false);
-  return true;
-}
-
-function showSection(id, btn){
-  document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
-  if(btn) btn.classList.add("active");
-  const titles = {dashboard:"Dashboard",tasks:"Manage Tasks",leaderboard:"Leaderboard"};
-  document.getElementById("pageTitle").textContent = titles[id];
-  refresh();
-}
-
-function goTo(id){
-  const buttons = [...document.querySelectorAll(".nav button")];
-  const index = id === "dashboard" ? 0 : id === "tasks" ? 1 : 2;
-  showSection(id, buttons[index]);
-}
-
-document.getElementById("taskForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const task = {
-    id: Date.now(),
-    title: document.getElementById("taskTitle").value.trim(),
-    group: document.getElementById("taskGroup").value.trim(),
-    deadline: document.getElementById("taskDeadline").value,
-    points: Number(document.getElementById("taskPoints").value),
-    description: document.getElementById("taskDescription").value.trim(),
-    completed: 0
-  };
-  tasks.unshift(task);
-  try{
-    await saveData();
-    e.target.reset();
-    document.getElementById("taskPoints").value = 10;
-    showNotice("taskNotice");
-    refresh();
-  }catch(error){
-    alert("Could not save data.json: " + error.message);
-  }
-});
-
-document.getElementById("studentForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const id = document.getElementById("studentId").value.trim();
-  const existing = students.find(s => s.id === id);
-  const data = {
-    name: document.getElementById("studentName").value.trim(),
-    id,
-    group: document.getElementById("studentGroup").value.trim(),
-    points: Number(document.getElementById("studentPoints").value)
-  };
-  if(existing) Object.assign(existing, data);
-  else students.push(data);
-  try{
-    await saveData();
-    e.target.reset();
-    document.getElementById("studentGroup").value = "SWE 43_C";
-    document.getElementById("studentPoints").value = 0;
-    showNotice("studentNotice");
-    refresh();
-  }catch(error){
-    alert("Could not save data.json: " + error.message);
-  }
-});
-
-async function deleteTask(id){
-  if(confirm("Delete this task?")){
-    tasks = tasks.filter(t => t.id !== id);
-    try{ await saveData(); refresh(); }
-    catch(error){ alert("Could not save data.json: " + error.message); }
-  }
-}
-
-async function deleteStudent(id){
-  if(confirm("Remove this student from leaderboard?")){
-    students = students.filter(s => s.id !== id);
-    try{ await saveData(); refresh(); }
-    catch(error){ alert("Could not save data.json: " + error.message); }
-  }
-}
-
-function showNotice(id){
-  const el = document.getElementById(id);
-  el.style.display = "block";
-  setTimeout(() => el.style.display = "none", 2200);
-}
-
-function downloadData(){
-  const payload = JSON.stringify({students, tasks, updatedAt:new Date().toISOString()}, null, 2);
-  const blob = new Blob([payload], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'data.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showNotice('exportNotice');
-}
-
-function refresh(){
-  document.getElementById("studentCount").textContent = students.length;
-  document.getElementById("taskCount").textContent = tasks.length;
-  document.getElementById("pointCount").textContent = students.reduce((a,s)=>a+s.points,0);
-  document.getElementById("completedCount").textContent = tasks.reduce((a,t)=>a+(t.completed||0),0);
-
-  const taskList = document.getElementById("taskList");
-  if(!tasks.length){
-    taskList.innerHTML = '<div class="empty">No tasks added yet.</div>';
-  } else {
-    taskList.innerHTML = tasks.map(t => `
-      <div class="task-item">
-        <div>
-          <span class="tag">${escapeHtml(t.group)}</span>
-          <h3>${escapeHtml(t.title)}</h3>
-          <p>${escapeHtml(t.description || "No description")} · ${t.points} points · Deadline: ${formatDate(t.deadline)}</p>
+    // Render Tasks
+    const taskList = document.getElementById('taskList');
+    const recentTasks = document.getElementById('recentTasks');
+    
+    if (state.tasks.length === 0) {
+      taskList.innerHTML = '<div class="empty">No tasks added yet.</div>';
+      recentTasks.innerHTML = '<div class="empty">No recent tasks.</div>';
+    } else {
+      const taskHTML = state.tasks.map((task, idx) => `
+        <div class="task-item">
+          <div>
+            <h3>${task.title} <span class="tag">${task.group}</span></h3>
+            <p>${task.description || ''}</p>
+            <small style="color:var(--muted)">Deadline: ${task.deadline || 'N/A'} • Points: ${task.points}</small>
+          </div>
+          <div>
+            <button class="danger" onclick="deleteTask(${idx})">Delete</button>
+          </div>
         </div>
-        <button class="danger" onclick="deleteTask(${t.id})">Delete</button>
-      </div>
-    `).join("");
+      `).join('');
+      
+      taskList.innerHTML = taskHTML;
+      recentTasks.innerHTML = state.tasks.slice(-3).map(task => `
+        <div class="task-item">
+          <div>
+            <h3>${task.title}</h3>
+            <p>${task.group} • ${task.points} pts</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render Leaderboard
+    const leaderboardBody = document.getElementById('leaderboardBody');
+    const sortedStudents = [...state.students].sort((a, b) => (parseInt(b.points) || 0) - (parseInt(a.points) || 0));
+
+    if (sortedStudents.length === 0) {
+      leaderboardBody.innerHTML = '<tr><td colspan="6" class="empty">No students found.</td></tr>';
+    } else {
+      leaderboardBody.innerHTML = sortedStudents.map((st, idx) => `
+        <tr>
+          <td class="rank">#${idx + 1}</td>
+          <td><strong>${st.name}</strong></td>
+          <td>${st.id}</td>
+          <td><span class="tag">${st.group}</span></td>
+          <td class="points">${st.points} pts</td>
+          <td>
+            <button class="danger" onclick="deleteStudent('${st.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
   }
 
-  document.getElementById("recentTasks").innerHTML = tasks.slice(0,5).map(t => `
-    <div class="task-item">
-      <div><h3>${escapeHtml(t.title)}</h3><p>${escapeHtml(t.group)} · ${t.points} points</p></div>
-      <span class="tag">${formatDate(t.deadline)}</span>
-    </div>
-  `).join("") || '<div class="empty">No tasks yet.</div>';
+  // Handle Adding Tasks
+  document.getElementById('taskForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newTask = {
+      title: document.getElementById('taskTitle').value,
+      group: document.getElementById('taskGroup').value,
+      deadline: document.getElementById('taskDeadline').value,
+      points: document.getElementById('taskPoints').value,
+      description: document.getElementById('taskDescription').value
+    };
+    state.tasks.push(newTask);
+    await saveToFirebase();
+    e.target.reset();
+    showNotice('taskNotice', '✅ Task published & synced live!');
+  });
 
-  const sorted = [...students].sort((a,b)=>b.points-a.points);
-  document.getElementById("leaderboardBody").innerHTML = sorted.map((s,i)=>`
-    <tr>
-      <td class="rank">#${i+1}</td>
-      <td><strong>${escapeHtml(s.name)}</strong></td>
-      <td>${escapeHtml(s.id)}</td>
-      <td>${escapeHtml(s.group)}</td>
-      <td class="points">${s.points}</td>
-      <td><button class="danger" onclick="deleteStudent('${escapeAttr(s.id)}')">Remove</button></td>
-    </tr>
-  `).join("") || '<tr><td colspan="6" class="empty">No students added yet.</td></tr>';
-}
+  // Handle Adding/Updating Students
+  document.getElementById('studentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const studentId = document.getElementById('studentId').value;
+    const existingIndex = state.students.findIndex(s => s.id === studentId);
 
-function formatDate(value){
-  if(!value) return "No deadline";
-  const d = new Date(value);
-  return isNaN(d) ? value : d.toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
-}
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-}
-function escapeAttr(str){ return String(str).replace(/'/g,"\\'"); }
+    const studentData = {
+      name: document.getElementById('studentName').value,
+      id: studentId,
+      group: document.getElementById('studentGroup').value,
+      points: parseInt(document.getElementById('studentPoints').value) || 0
+    };
 
-loadSharedData();
+    if (existingIndex > -1) {
+      state.students[existingIndex] = studentData;
+    } else {
+      state.students.push(studentData);
+    }
+
+    await saveToFirebase();
+    e.target.reset();
+    showNotice('studentNotice', '✅ Student updated & synced live!');
+  });
+
+  async function deleteTask(index) {
+    if (confirm('Delete this task?')) {
+      state.tasks.splice(index, 1);
+      await saveToFirebase();
+    }
+  }
+
+  async function deleteStudent(studentId) {
+    if (confirm('Delete this student?')) {
+      state.students = state.students.filter(s => s.id !== studentId);
+      await saveToFirebase();
+    }
+  }
+
+  function showSection(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('pageTitle').textContent = id.charAt(0).toUpperCase() + id.slice(1);
+  }
+
+  function goTo(id) {
+    const btn = document.querySelector(`.nav button[onclick*="${id}"]`);
+    showSection(id, btn);
+  }
+
+  function showNotice(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+  }
+
+  // Start listener on load
+  initRealtimeSync();
 </script>
 </body>
 </html>
