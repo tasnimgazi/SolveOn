@@ -1,431 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SolveOn Admin Portal</title>
-<style>
-:root{
-  --blue:#168bd1;
-  --blue2:#eaf7ff;
-  --dark:#102a43;
-  --text:#243b53;
-  --muted:#627d98;
-  --white:#fff;
-  --border:#d9eaf5;
-  --danger:#e05252;
-  --green:#24a36a;
-  --shadow:0 10px 30px rgba(16,42,67,.08);
-}
-*{box-sizing:border-box}
-body{
-  margin:0;font-family:Inter,Arial,sans-serif;background:#f5fbff;color:var(--text);
-}
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
-.layout{display:flex;min-height:100vh}
-.sidebar{
-  width:245px;background:var(--white);border-right:1px solid var(--border);
-  padding:24px 16px;position:fixed;left:0;top:0;bottom:0;
-}
-.logo{display:flex;align-items:center;gap:10px;padding:5px 10px 28px}
-.logo-mark{
-  width:42px;height:42px;border-radius:13px;background:var(--blue);
-  color:white;display:grid;place-items:center;font-size:24px;font-weight:800;
-}
-.logo h2{margin:0;font-size:20px;color:var(--dark)}
-.logo small{color:var(--muted)}
-.nav button{
-  width:100%;border:0;background:transparent;text-align:left;padding:13px 14px;
-  margin:4px 0;border-radius:12px;color:var(--text);font-weight:600;
-}
-.nav button.active,.nav button:hover{background:var(--blue2);color:var(--blue)}
-.main{margin-left:245px;width:calc(100% - 245px);padding:28px 34px}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
-.topbar h1{margin:0;color:var(--dark);font-size:28px}
-.topbar p{margin:5px 0 0;color:var(--muted)}
-.admin-badge{background:var(--blue2);color:var(--blue);padding:9px 14px;border-radius:30px;font-weight:700}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
-.stat{
-  background:white;border:1px solid var(--border);border-radius:17px;padding:20px;
-  box-shadow:var(--shadow)
-}
-.stat span{color:var(--muted);font-size:14px}
-.stat strong{display:block;font-size:28px;color:var(--dark);margin-top:8px}
-.card{
-  background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px;
-  box-shadow:var(--shadow);margin-bottom:22px
-}
-.card h2{margin:0 0 18px;color:var(--dark);font-size:20px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.full{grid-column:1/-1}
-label{display:block;font-weight:700;font-size:13px;margin-bottom:7px}
-input,textarea,select{
-  width:100%;padding:12px 13px;border:1px solid #cfe2ee;border-radius:11px;
-  outline:none;background:#fbfeff;color:var(--text)
-}
-input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #168bd11c}
-textarea{resize:vertical;min-height:90px}
-.primary{
-  border:0;background:var(--blue);color:#fff;padding:12px 20px;border-radius:11px;
-  font-weight:700
-}
-.primary:hover{filter:brightness(.95)}
-.secondary{
-  border:1px solid var(--border);background:white;color:var(--text);padding:10px 15px;border-radius:10px
-}
-.danger{border:0;background:#fff0f0;color:var(--danger);padding:9px 12px;border-radius:9px;font-weight:700}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th,td{padding:13px 10px;border-bottom:1px solid #edf4f8;text-align:left}
-th{font-size:12px;text-transform:uppercase;color:var(--muted)}
-.rank{font-weight:800;color:var(--blue)}
-.points{font-weight:800;color:var(--green)}
-.actions{display:flex;gap:7px;align-items:center}
-.task-item{
-  display:flex;justify-content:space-between;gap:20px;align-items:center;
-  border:1px solid #e4f0f6;padding:14px;border-radius:12px;margin:10px 0
-}
-.task-item h3{margin:0 0 4px;font-size:16px}
-.task-item p{margin:0;color:var(--muted);font-size:13px}
-.tag{display:inline-block;background:var(--blue2);color:var(--blue);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700}
-.hidden{display:none}
-.empty{text-align:center;color:var(--muted);padding:25px}
-.notice{
-  padding:12px 14px;border-radius:11px;background:#edfff6;color:#18794e;
-  margin-bottom:15px;display:none
-}
-@media(max-width:900px){
-  .sidebar{width:200px}.main{margin-left:200px;width:calc(100% - 200px);padding:22px}
-  .stats{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:650px){
-  .sidebar{position:static;width:100%;height:auto}.layout{display:block}.main{margin:0;width:100%}
-  .nav{display:flex;overflow:auto}.nav button{white-space:nowrap}
-  .stats,.form-grid{grid-template-columns:1fr}.full{grid-column:auto}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolveOn Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
-<body>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-mark">S</div>
-      <div><h2>SolveOn</h2><small>Admin Portal</small></div>
-    </div>
-    <nav class="nav">
-      <button class="active" onclick="showSection('dashboard',this)">📊 Dashboard</button>
-      <button onclick="showSection('tasks',this)">📝 Manage Tasks</button>
-      <button onclick="showSection('leaderboard',this)">🏆 Leaderboard</button>
-    </nav>
-  </aside>
-
-  <main class="main">
-    <div class="topbar">
-      <div>
-        <h1 id="pageTitle">Dashboard</h1>
-        <p>We will grow together 🚀</p>
-      </div>
-      <div class="admin-badge">Admin</div>
-    </div>
-
-    <div id="dashboard" class="section">
-      <div class="stats">
-        <div class="stat"><span>Total Students</span><strong id="studentCount">0</strong></div>
-        <div class="stat"><span>Total Tasks</span><strong id="taskCount">0</strong></div>
-        <div class="stat"><span>Total Points</span><strong id="pointCount">0</strong></div>
-        <div class="stat"><span>Completed Tasks</span><strong id="completedCount">0</strong></div>
-      </div>
-      <div class="card">
-        <h2>🔥 Live Firebase Database Connection</h2>
-        <div id="connectionNotice" class="notice" style="display:block;background:#eef9ff;color:#176b99">
-          ● Connected to Firebase Firestore backend (`solveon-a0cf4`).
+<body class="bg-slate-900 text-white min-h-screen p-6">
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <!-- Header & Status -->
+        <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-cyan-400">SolveOn Admin Control Panel</h1>
+                <p class="text-xs text-slate-400 mt-1">Manage both Tasks and Leaderboard in real-time</p>
+            </div>
+            <span id="sync-status" class="px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full border border-yellow-500/30">Connecting to Firebase...</span>
         </div>
-        <p style="color:var(--muted);margin-top:0">
-          Changes made in this admin panel will sync in real-time across all devices reading the main website.
-        </p>
-      </div>
-      <div class="card">
-        <h2>Quick Actions</h2>
-        <button class="primary" onclick="goTo('tasks')">+ Add New Task</button>
-        <button class="secondary" onclick="goTo('leaderboard')">🏆 Manage Leaderboard</button>
-      </div>
-      <div class="card">
-        <h2>Recent Tasks</h2>
-        <div id="recentTasks"></div>
-      </div>
-    </div>
 
-    <div id="tasks" class="section hidden">
-      <div class="card">
-        <h2>➕ Add New Task</h2>
-        <div id="taskNotice" class="notice">Task added successfully.</div>
-        <form id="taskForm">
-          <div class="form-grid">
-            <div>
-              <label>Task Title</label>
-              <input id="taskTitle" required placeholder="e.g. Complete Java OOP Practice">
+        <!-- 1. TASKS MANAGEMENT SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Add Task Form -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                <h2 class="text-lg font-semibold text-cyan-300">📌 Add New Task</h2>
+                <form id="task-form" class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Task Title</label>
+                        <input type="text" id="t-title" required placeholder="e.g. Solve Array Problem" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Category / Group</label>
+                        <input type="text" id="t-category" required placeholder="e.g. Data Structures" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Task Link / Description</label>
+                        <input type="text" id="t-link" required placeholder="e.g. https://leetcode.com/..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded text-sm transition">Publish Task</button>
+                </form>
             </div>
-            <div>
-              <label>Class / Group</label>
-              <input id="taskGroup" required placeholder="e.g. SWE 43_C">
-            </div>
-            <div>
-              <label>Deadline</label>
-              <input id="taskDeadline" type="datetime-local" required>
-            </div>
-            <div>
-              <label>Points</label>
-              <input id="taskPoints" type="number" min="1" value="10" required>
-            </div>
-            <div class="full">
-              <label>Description</label>
-              <textarea id="taskDescription" placeholder="Explain what students need to submit..."></textarea>
-            </div>
-          </div>
-          <button class="primary" type="submit" style="margin-top:15px">Publish Task</button>
-        </form>
-      </div>
 
-      <div class="card">
-        <h2>All Tasks</h2>
-        <div id="taskList"></div>
-      </div>
-    </div>
-
-    <div id="leaderboard" class="section hidden">
-      <div class="card">
-        <h2>🏆 Add / Update Student</h2>
-        <div id="studentNotice" class="notice">Leaderboard updated successfully.</div>
-        <form id="studentForm">
-          <div class="form-grid">
-            <div>
-              <label>Student Name</label>
-              <input id="studentName" required placeholder="e.g. Gazi Tasnim Hasan">
+            <!-- Task List Display -->
+            <div class="md:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                <h2 class="text-lg font-semibold text-cyan-300">Live Active Tasks</h2>
+                <div id="tasks-container" class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    <p class="text-sm text-slate-500">Loading tasks...</p>
+                </div>
             </div>
-            <div>
-              <label>Student ID</label>
-              <input id="studentId" required placeholder="e.g. 242-35-176">
-            </div>
-            <div>
-              <label>Class / Group</label>
-              <input id="studentGroup" value="SWE 43_C" required>
-            </div>
-            <div>
-              <label>Points</label>
-              <input id="studentPoints" type="number" min="0" value="0" required>
-            </div>
-          </div>
-          <button class="primary" type="submit" style="margin-top:15px">Save Student</button>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2>Leaderboard</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Rank</th><th>Student</th><th>ID</th><th>Group</th><th>Points</th><th>Action</th></tr>
-            </thead>
-            <tbody id="leaderboardBody"></tbody>
-          </table>
         </div>
-      </div>
+
+        <!-- 2. LEADERBOARD SECTION -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-6">
+            <h2 class="text-lg font-semibold text-cyan-300">🏆 Student Leaderboard Management</h2>
+            
+            <!-- Student Form -->
+            <form id="student-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900 p-4 rounded-lg border border-slate-700/50">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Student Name</label>
+                    <input type="text" id="s-name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Student ID</label>
+                    <input type="text" id="s-id" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Class / Group</label>
+                    <input type="text" id="s-group" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Points</label>
+                    <input type="number" id="s-points" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="md:col-span-4 flex justify-end">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2 rounded text-sm transition">Save Student</button>
+                </div>
+            </form>
+
+            <!-- Leaderboard Table View -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-xs text-cyan-400 uppercase">
+                        <tr>
+                            <th class="p-3">Rank</th>
+                            <th class="p-3">Student</th>
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Group</th>
+                            <th class="p-3">Points</th>
+                            <th class="p-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr><td colspan="6" class="p-4 text-center text-slate-500">Loading live students...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
-  </main>
-</div>
 
-<!-- Firebase Compatible SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Corrected Project ID: solveon-e0cf4
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6F7Y16vDy20HAlP2NFTXsz37_o8l_VZQ",
+            authDomain: "solveon-e0cf4.firebaseapp.com",
+            projectId: "solveon-e0cf4",
+            storageBucket: "solveon-e0cf4.firebasestorage.app",
+            messagingSenderId: "662833382074",
+            appId: "1:662833382074:web:a409e20c8c2b34669d3883",
+            measurementId: "G-Z59CBFNBM7"
+        };
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD6F7Y16vDy20HAlP2NFTXsz37_o8l_VZQ",
-    authDomain: "solveon-e0cf4.firebaseapp.com",
-    projectId: "solveon-e0cf4",
-    storageBucket: "solveon-e0cf4.firebasestorage.app",
-    messagingSenderId: "662833382074",
-    appId: "1:662833382074:web:a409e20c8c2b34669d3883",
-    measurementId: "G-Z59CBFNBM7"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  const db = firebase.firestore();
-
-  let state = {
-    students: [],
-    tasks: []
-  };
-
-  // Real-time synchronization from Firebase
-  function initRealtimeSync() {
-    db.collection("solveon").doc("mainData")
-      .onSnapshot((doc) => {
-        if (doc.exists) {
-          const data = doc.data();
-          state.students = Array.isArray(data.students) ? data.students : [];
-          state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
-          renderUI();
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-      }, (error) => {
-        console.error("Firestore read error:", error);
-      });
-  }
+        const db = firebase.firestore();
 
-  // Save current state directly to Firebase
-  async function saveToFirebase() {
-    try {
-      await db.collection("solveon").doc("mainData").set({
-        students: state.students,
-        tasks: state.tasks,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      alert("❌ Save error: " + e.message);
-    }
-  }
+        let studentsList = [];
+        let tasksList = [];
 
-  function renderUI() {
-    // Stats calculation
-    document.getElementById('studentCount').textContent = state.students.length;
-    document.getElementById('taskCount').textContent = state.tasks.length;
-    
-    const totalPoints = state.students.reduce((acc, curr) => acc + (parseInt(curr.points) || 0), 0);
-    document.getElementById('pointCount').textContent = totalPoints;
+        // Real-time Firestore Listener
+        db.collection("solveon").doc("mainData")
+            .onSnapshot((doc) => {
+                const statusEl = document.getElementById("sync-status");
+                statusEl.className = "px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full border border-green-500/30";
+                statusEl.innerText = "● Live Firestore Connected";
 
-    // Render Tasks
-    const taskList = document.getElementById('taskList');
-    const recentTasks = document.getElementById('recentTasks');
-    
-    if (state.tasks.length === 0) {
-      taskList.innerHTML = '<div class="empty">No tasks added yet.</div>';
-      recentTasks.innerHTML = '<div class="empty">No recent tasks.</div>';
-    } else {
-      const taskHTML = state.tasks.map((task, idx) => `
-        <div class="task-item">
-          <div>
-            <h3>${task.title} <span class="tag">${task.group}</span></h3>
-            <p>${task.description || ''}</p>
-            <small style="color:var(--muted)">Deadline: ${task.deadline || 'N/A'} • Points: ${task.points}</small>
-          </div>
-          <div>
-            <button class="danger" onclick="deleteTask(${idx})">Delete</button>
-          </div>
-        </div>
-      `).join('');
-      
-      taskList.innerHTML = taskHTML;
-      recentTasks.innerHTML = state.tasks.slice(-3).map(task => `
-        <div class="task-item">
-          <div>
-            <h3>${task.title}</h3>
-            <p>${task.group} • ${task.points} pts</p>
-          </div>
-        </div>
-      `).join('');
-    }
+                if (doc.exists) {
+                    const data = doc.data();
+                    studentsList = data.students || [];
+                    tasksList = data.tasks || [];
+                } else {
+                    studentsList = [];
+                    tasksList = [];
+                }
 
-    // Render Leaderboard
-    const leaderboardBody = document.getElementById('leaderboardBody');
-    const sortedStudents = [...state.students].sort((a, b) => (parseInt(b.points) || 0) - (parseInt(a.points) || 0));
+                renderLeaderboard();
+                renderTasks();
+            }, (error) => {
+                console.error("Firestore Error:", error);
+                const statusEl = document.getElementById("sync-status");
+                statusEl.className = "px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded-full border border-red-500/30";
+                statusEl.innerText = "❌ Permission or Connection Error";
+            });
 
-    if (sortedStudents.length === 0) {
-      leaderboardBody.innerHTML = '<tr><td colspan="6" class="empty">No students found.</td></tr>';
-    } else {
-      leaderboardBody.innerHTML = sortedStudents.map((st, idx) => `
-        <tr>
-          <td class="rank">#${idx + 1}</td>
-          <td><strong>${st.name}</strong></td>
-          <td>${st.id}</td>
-          <td><span class="tag">${st.group}</span></td>
-          <td class="points">${st.points} pts</td>
-          <td>
-            <button class="danger" onclick="deleteStudent('${st.id}')">Delete</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-  }
+        // 1. Render Leaderboard Table
+        function renderLeaderboard() {
+            const tbody = document.getElementById("leaderboard-body");
+            if (studentsList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No students added yet.</td></tr>`;
+                return;
+            }
 
-  // Handle Adding Tasks
-  document.getElementById('taskForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newTask = {
-      title: document.getElementById('taskTitle').value,
-      group: document.getElementById('taskGroup').value,
-      deadline: document.getElementById('taskDeadline').value,
-      points: document.getElementById('taskPoints').value,
-      description: document.getElementById('taskDescription').value
-    };
-    state.tasks.push(newTask);
-    await saveToFirebase();
-    e.target.reset();
-    showNotice('taskNotice', '✅ Task published & synced live!');
-  });
+            const sorted = [...studentsList].sort((a, b) => Number(b.points) - Number(a.points));
 
-  // Handle Adding/Updating Students
-  document.getElementById('studentForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const studentId = document.getElementById('studentId').value;
-    const existingIndex = state.students.findIndex(s => s.id === studentId);
+            tbody.innerHTML = sorted.map((st, idx) => `
+                <tr class="border-b border-slate-700/50 hover:bg-slate-700/30">
+                    <td class="p-3 font-bold text-cyan-400">#${idx + 1}</td>
+                    <td class="p-3 font-medium text-white">${st.name}</td>
+                    <td class="p-3">${st.id}</td>
+                    <td class="p-3">${st.group}</td>
+                    <td class="p-3 font-semibold text-emerald-400">${st.points}</td>
+                    <td class="p-3">
+                        <button onclick="deleteStudent('${st.id}')" class="text-xs bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-    const studentData = {
-      name: document.getElementById('studentName').value,
-      id: studentId,
-      group: document.getElementById('studentGroup').value,
-      points: parseInt(document.getElementById('studentPoints').value) || 0
-    };
+        // 2. Render Tasks List
+        function renderTasks() {
+            const container = document.getElementById("tasks-container");
+            if (tasksList.length === 0) {
+                container.innerHTML = `<p class="text-sm text-slate-500">No active tasks created yet.</p>`;
+                return;
+            }
 
-    if (existingIndex > -1) {
-      state.students[existingIndex] = studentData;
-    } else {
-      state.students.push(studentData);
-    }
+            container.innerHTML = tasksList.map((t, idx) => `
+                <div class="flex items-center justify-between p-3 bg-slate-900 border border-slate-700/60 rounded-lg">
+                    <div>
+                        <span class="text-xs text-cyan-400 font-semibold uppercase">[${t.category}]</span>
+                        <h4 class="text-sm font-medium text-white">${t.title}</h4>
+                        <a href="${t.link}" target="_blank" class="text-xs text-slate-400 hover:underline truncate block max-w-md">${t.link}</a>
+                    </div>
+                    <button onclick="deleteTask(${idx})" class="text-xs bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2.5 py-1 rounded transition">Remove</button>
+                </div>
+            `).join('');
+        }
 
-    await saveToFirebase();
-    e.target.reset();
-    showNotice('studentNotice', '✅ Student updated & synced live!');
-  });
+        // Save Student
+        document.getElementById("student-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("s-id").value.trim();
+            const name = document.getElementById("s-name").value.trim();
+            const group = document.getElementById("s-group").value.trim();
+            const points = Number(document.getElementById("s-points").value);
 
-  async function deleteTask(index) {
-    if (confirm('Delete this task?')) {
-      state.tasks.splice(index, 1);
-      await saveToFirebase();
-    }
-  }
+            const existingIndex = studentsList.findIndex(s => s.id === id);
+            if (existingIndex > -1) {
+                studentsList[existingIndex] = { id, name, group, points };
+            } else {
+                studentsList.push({ id, name, group, points });
+            }
 
-  async function deleteStudent(studentId) {
-    if (confirm('Delete this student?')) {
-      state.students = state.students.filter(s => s.id !== studentId);
-      await saveToFirebase();
-    }
-  }
+            await syncToFirestore("Student saved successfully!");
+            document.getElementById("student-form").reset();
+        });
 
-  function showSection(id, btn) {
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    document.getElementById('pageTitle').textContent = id.charAt(0).toUpperCase() + id.slice(1);
-  }
+        // Add Task
+        document.getElementById("task-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("t-title").value.trim();
+            const category = document.getElementById("t-category").value.trim();
+            const link = document.getElementById("t-link").value.trim();
 
-  function goTo(id) {
-    const btn = document.querySelector(`.nav button[onclick*="${id}"]`);
-    showSection(id, btn);
-  }
+            tasksList.push({ title, category, link, createdAt: new Date().toISOString() });
 
-  function showNotice(id, msg) {
-    const el = document.getElementById(id);
-    el.textContent = msg;
-    el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 3000);
-  }
+            await syncToFirestore("Task published successfully!");
+            document.getElementById("task-form").reset();
+        });
 
-  // Start listener on load
-  initRealtimeSync();
-</script>
+        // Delete Student
+        async function deleteStudent(id) {
+            if (!confirm("Delete this student?")) return;
+            studentsList = studentsList.filter(s => s.id !== id);
+            await syncToFirestore("Student removed.");
+        }
+
+        // Delete Task
+        async function deleteTask(index) {
+            if (!confirm("Delete this task?")) return;
+            tasksList.splice(index, 1);
+            await syncToFirestore("Task removed.");
+        }
+
+        // Helper Sync Function
+        async function syncToFirestore(msg) {
+            try {
+                await db.collection("solveon").doc("mainData").set({
+                    students: studentsList,
+                    tasks: tasksList
+                }, { merge: true });
+                alert("✅ " + msg);
+            } catch (err) {
+                alert("❌ Save error: " + err.message);
+            }
+        }
+    </script>
 </body>
 </html>
