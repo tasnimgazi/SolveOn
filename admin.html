@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolveOn Admin Portal</title>
+<style>
+:root{
+  --blue:#168bd1;
+  --blue2:#eaf7ff;
+  --dark:#102a43;
+  --text:#243b53;
+  --muted:#627d98;
+  --white:#fff;
+  --border:#d9eaf5;
+  --danger:#e05252;
+  --green:#24a36a;
+  --shadow:0 10px 30px rgba(16,42,67,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Inter,Arial,sans-serif;background:#f5fbff;color:var(--text);
+}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:245px;background:var(--white);border-right:1px solid var(--border);
+  padding:24px 16px;position:fixed;left:0;top:0;bottom:0;
+}
+.logo{display:flex;align-items:center;gap:10px;padding:5px 10px 28px}
+.logo-mark{
+  width:42px;height:42px;border-radius:13px;background:var(--blue);
+  color:white;display:grid;place-items:center;font-size:24px;font-weight:800;
+}
+.logo h2{margin:0;font-size:20px;color:var(--dark)}
+.logo small{color:var(--muted)}
+.nav button{
+  width:100%;border:0;background:transparent;text-align:left;padding:13px 14px;
+  margin:4px 0;border-radius:12px;color:var(--text);font-weight:600;
+}
+.nav button.active,.nav button:hover{background:var(--blue2);color:var(--blue)}
+.main{margin-left:245px;width:calc(100% - 245px);padding:28px 34px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.topbar h1{margin:0;color:var(--dark);font-size:28px}
+.topbar p{margin:5px 0 0;color:var(--muted)}
+.admin-badge{background:var(--blue2);color:var(--blue);padding:9px 14px;border-radius:30px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat{
+  background:white;border:1px solid var(--border);border-radius:17px;padding:20px;
+  box-shadow:var(--shadow)
+}
+.stat span{color:var(--muted);font-size:14px}
+.stat strong{display:block;font-size:28px;color:var(--dark);margin-top:8px}
+.card{
+  background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px;
+  box-shadow:var(--shadow);margin-bottom:22px
+}
+.card h2{margin:0 0 18px;color:var(--dark);font-size:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.full{grid-column:1/-1}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:7px}
+input,textarea,select{
+  width:100%;padding:12px 13px;border:1px solid #cfe2ee;border-radius:11px;
+  outline:none;background:#fbfeff;color:var(--text)
+}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #168bd11c}
+textarea{resize:vertical;min-height:90px}
+.primary{
+  border:0;background:var(--blue);color:#fff;padding:12px 20px;border-radius:11px;
+  font-weight:700
+}
+.primary:hover{filter:brightness(.95)}
+.secondary{
+  border:1px solid var(--border);background:white;color:var(--text);padding:10px 15px;border-radius:10px
+}
+.danger{border:0;background:#fff0f0;color:var(--danger);padding:9px 12px;border-radius:9px;font-weight:700}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:13px 10px;border-bottom:1px solid #edf4f8;text-align:left}
+th{font-size:12px;text-transform:uppercase;color:var(--muted)}
+.rank{font-weight:800;color:var(--blue)}
+.points{font-weight:800;color:var(--green)}
+.actions{display:flex;gap:7px;align-items:center}
+.task-item{
+  display:flex;justify-content:space-between;gap:20px;align-items:center;
+  border:1px solid #e4f0f6;padding:14px;border-radius:12px;margin:10px 0
+}
+.task-item h3{margin:0 0 4px;font-size:16px}
+.task-item p{margin:0;color:var(--muted);font-size:13px}
+.tag{display:inline-block;background:var(--blue2);color:var(--blue);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.hidden{display:none}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.notice{
+  padding:12px 14px;border-radius:11px;background:#edfff6;color:#18794e;
+  margin-bottom:15px;display:none
+}
+@media(max-width:900px){
+  .sidebar{width:200px}.main{margin-left:200px;width:calc(100% - 200px);padding:22px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:650px){
+  .sidebar{position:static;width:100%;height:auto}.layout{display:block}.main{margin:0;width:100%}
+  .nav{display:flex;overflow:auto}.nav button{white-space:nowrap}
+  .stats,.form-grid{grid-template-columns:1fr}.full{grid-column:auto}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">S</div>
+      <div><h2>SolveOn</h2><small>Admin Portal</small></div>
+    </div>
+    <nav class="nav">
+      <button class="active" onclick="showSection('dashboard',this)">📊 Dashboard</button>
+      <button onclick="showSection('tasks',this)">📝 Manage Tasks</button>
+      <button onclick="showSection('leaderboard',this)">🏆 Leaderboard</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p>We will grow together 🚀</p>
+      </div>
+      <div class="admin-badge">Admin</div>
+    </div>
+
+    <div id="dashboard" class="section">
+      <div id="exportNotice" class="notice">data.json exported successfully.</div>
+      <div class="stats">
+        <div class="stat"><span>Total Students</span><strong id="studentCount">0</strong></div>
+        <div class="stat"><span>Total Tasks</span><strong id="taskCount">0</strong></div>
+        <div class="stat"><span>Total Points</span><strong id="pointCount">0</strong></div>
+        <div class="stat"><span>Completed Tasks</span><strong id="completedCount">0</strong></div>
+      </div>
+      <div class="card">
+        <h2>🔗 Shared Data Connection</h2>
+        <div id="connectionNotice" class="notice" style="display:block;background:#eef9ff;color:#176b99">Not connected yet. Click <b>Connect data.json</b> and choose the same <b>data.json</b> used by your public SolveOn site.</div>
+        <p style="color:var(--muted);margin-top:0">Once connected, changes you make here are written directly to <b>data.json</b>. Your main site reads that same file, so leaderboard and tasks stay synchronized without a database or admin login.</p>
+        <button class="primary" onclick="connectDataFile()">🔗 Connect data.json</button>
+        <button class="secondary" onclick="loadSharedData()">↻ Reload shared data</button>
+        <button class="secondary" onclick="downloadData()">⬇ Backup data.json</button>
+        <p id="fileStatus" style="margin:12px 0 0;color:var(--muted);font-size:13px">Use VS Code <b>Live Server</b> to run this admin page.</p>
+      </div>
+      <div class="card">
+        <h2>Quick Actions</h2>
+        <button class="primary" onclick="goTo('tasks')">+ Add New Task</button>
+        <button class="secondary" onclick="goTo('leaderboard')">🏆 Manage Leaderboard</button>
+      </div>
+      <div class="card">
+        <h2>Recent Tasks</h2>
+        <div id="recentTasks"></div>
+      </div>
+    </div>
+
+    <div id="tasks" class="section hidden">
+      <div class="card">
+        <h2>➕ Add New Task</h2>
+        <div id="taskNotice" class="notice">Task added successfully.</div>
+        <form id="taskForm">
+          <div class="form-grid">
+            <div>
+              <label>Task Title</label>
+              <input id="taskTitle" required placeholder="e.g. Complete Java OOP Practice">
+            </div>
+            <div>
+              <label>Class / Group</label>
+              <input id="taskGroup" required placeholder="e.g. SWE 43_C">
+            </div>
+            <div>
+              <label>Deadline</label>
+              <input id="taskDeadline" type="datetime-local" required>
+            </div>
+            <div>
+              <label>Points</label>
+              <input id="taskPoints" type="number" min="1" value="10" required>
+            </div>
+            <div class="full">
+              <label>Description</label>
+              <textarea id="taskDescription" placeholder="Explain what students need to submit..."></textarea>
+            </div>
+          </div>
+          <button class="primary" type="submit">Publish Task</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>All Tasks</h2>
+        <div id="taskList"></div>
+      </div>
+    </div>
+
+    <div id="leaderboard" class="section hidden">
+      <div class="card">
+        <h2>🏆 Add / Update Student</h2>
+        <div id="studentNotice" class="notice">Leaderboard updated successfully.</div>
+        <form id="studentForm">
+          <div class="form-grid">
+            <div>
+              <label>Student Name</label>
+              <input id="studentName" required placeholder="e.g. Gazi Tasnim Hasan">
+            </div>
+            <div>
+              <label>Student ID</label>
+              <input id="studentId" required placeholder="e.g. 242-35-176">
+            </div>
+            <div>
+              <label>Class / Group</label>
+              <input id="studentGroup" value="SWE 43_C" required>
+            </div>
+            <div>
+              <label>Points</label>
+              <input id="studentPoints" type="number" min="0" value="0" required>
+            </div>
+          </div>
+          <button class="primary" type="submit">Save Student</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Leaderboard</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Rank</th><th>Student</th><th>ID</th><th>Group</th><th>Points</th><th>Action</th></tr>
+            </thead>
+            <tbody id="leaderboardBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const TASK_KEY = "solveon_tasks";
+const STUDENT_KEY = "solveon_students";
+let tasks = [];
+let students = [];
+let dataFileHandle = null;
+
+function normalizeData(data){
+  return {
+    students: Array.isArray(data?.students) ? data.students : [],
+    tasks: Array.isArray(data?.tasks) ? data.tasks : [],
+    updatedAt: data?.updatedAt || new Date().toISOString()
+  };
+}
+
+function setLocalBackup(){
+  localStorage.setItem(TASK_KEY, JSON.stringify(tasks));
+  localStorage.setItem(STUDENT_KEY, JSON.stringify(students));
+}
+
+function applyData(data){
+  const normalized = normalizeData(data);
+  students = normalized.students;
+  tasks = normalized.tasks;
+  setLocalBackup();
+  refresh();
+}
+
+async function loadSharedData(){
+  try{
+    const response = await fetch('data.json?v=' + Date.now(), {cache:'no-store'});
+    if(!response.ok) throw new Error('Could not load data.json');
+    const data = await response.json();
+    applyData(data);
+    setConnectionStatus('Shared data loaded. Connect the file below to enable direct saving.', false);
+  }catch(error){
+    // Fallback only for offline/local use.
+    try{
+      students = JSON.parse(localStorage.getItem(STUDENT_KEY) || '[]');
+      tasks = JSON.parse(localStorage.getItem(TASK_KEY) || '[]');
+      refresh();
+      setConnectionStatus('data.json could not be loaded. Run this page with Live Server.', true);
+    }catch(e){
+      setConnectionStatus('Could not load SolveOn data.', true);
+    }
+    console.error(error);
+  }
+}
+
+function setConnectionStatus(message, error=false){
+  const notice = document.getElementById('connectionNotice');
+  const status = document.getElementById('fileStatus');
+  if(notice){
+    notice.innerHTML = message;
+    notice.style.display = 'block';
+    notice.style.background = error ? '#fff3f3' : '#eef9ff';
+    notice.style.color = error ? '#a33' : '#176b99';
+  }
+  if(status){
+    status.innerHTML = dataFileHandle
+      ? '✅ Connected: <b>' + escapeHtml(dataFileHandle.name) + '</b> — changes save directly to this file.'
+      : 'Use VS Code <b>Live Server</b> to run this admin page.';
+  }
+}
+
+async function connectDataFile(){
+  if(!window.showOpenFilePicker){
+    setConnectionStatus('Your browser does not support direct file saving. Use Google Chrome or Microsoft Edge on your Mac.', true);
+    return;
+  }
+  try{
+    const [handle] = await window.showOpenFilePicker({
+      multiple:false,
+      types:[{description:'SolveOn shared data',accept:{'application/json':['.json']}}]
+    });
+    let permission = await handle.queryPermission({mode:'readwrite'});
+    if(permission !== 'granted') permission = await handle.requestPermission({mode:'readwrite'});
+    if(permission !== 'granted') throw new Error('Write permission was not granted.');
+
+    dataFileHandle = handle;
+    const file = await handle.getFile();
+    const data = JSON.parse(await file.text());
+    applyData(data);
+    setConnectionStatus('✅ Connected successfully. Admin changes will now save directly into the shared data.json file.', false);
+  }catch(error){
+    if(error?.name !== 'AbortError') setConnectionStatus('Connection failed: ' + escapeHtml(error.message), true);
+  }
+}
+
+async function saveData(){
+  const payload = {students, tasks, updatedAt:new Date().toISOString()};
+  setLocalBackup();
+  if(!dataFileHandle){
+    return false;
+  }
+  const writable = await dataFileHandle.createWritable();
+  await writable.write(JSON.stringify(payload, null, 2));
+  await writable.close();
+  setConnectionStatus('✅ Saved. The main SolveOn site will pick up the new leaderboard/tasks automatically.', false);
+  return true;
+}
+
+function showSection(id, btn){
+  document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  const titles = {dashboard:"Dashboard",tasks:"Manage Tasks",leaderboard:"Leaderboard"};
+  document.getElementById("pageTitle").textContent = titles[id];
+  refresh();
+}
+
+function goTo(id){
+  const buttons = [...document.querySelectorAll(".nav button")];
+  const index = id === "dashboard" ? 0 : id === "tasks" ? 1 : 2;
+  showSection(id, buttons[index]);
+}
+
+document.getElementById("taskForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const task = {
+    id: Date.now(),
+    title: document.getElementById("taskTitle").value.trim(),
+    group: document.getElementById("taskGroup").value.trim(),
+    deadline: document.getElementById("taskDeadline").value,
+    points: Number(document.getElementById("taskPoints").value),
+    description: document.getElementById("taskDescription").value.trim(),
+    completed: 0
+  };
+  tasks.unshift(task);
+  try{
+    await saveData();
+    e.target.reset();
+    document.getElementById("taskPoints").value = 10;
+    showNotice("taskNotice");
+    refresh();
+  }catch(error){
+    alert("Could not save data.json: " + error.message);
+  }
+});
+
+document.getElementById("studentForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = document.getElementById("studentId").value.trim();
+  const existing = students.find(s => s.id === id);
+  const data = {
+    name: document.getElementById("studentName").value.trim(),
+    id,
+    group: document.getElementById("studentGroup").value.trim(),
+    points: Number(document.getElementById("studentPoints").value)
+  };
+  if(existing) Object.assign(existing, data);
+  else students.push(data);
+  try{
+    await saveData();
+    e.target.reset();
+    document.getElementById("studentGroup").value = "SWE 43_C";
+    document.getElementById("studentPoints").value = 0;
+    showNotice("studentNotice");
+    refresh();
+  }catch(error){
+    alert("Could not save data.json: " + error.message);
+  }
+});
+
+async function deleteTask(id){
+  if(confirm("Delete this task?")){
+    tasks = tasks.filter(t => t.id !== id);
+    try{ await saveData(); refresh(); }
+    catch(error){ alert("Could not save data.json: " + error.message); }
+  }
+}
+
+async function deleteStudent(id){
+  if(confirm("Remove this student from leaderboard?")){
+    students = students.filter(s => s.id !== id);
+    try{ await saveData(); refresh(); }
+    catch(error){ alert("Could not save data.json: " + error.message); }
+  }
+}
+
+function showNotice(id){
+  const el = document.getElementById(id);
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 2200);
+}
+
+function downloadData(){
+  const payload = JSON.stringify({students, tasks, updatedAt:new Date().toISOString()}, null, 2);
+  const blob = new Blob([payload], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'data.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showNotice('exportNotice');
+}
+
+function refresh(){
+  document.getElementById("studentCount").textContent = students.length;
+  document.getElementById("taskCount").textContent = tasks.length;
+  document.getElementById("pointCount").textContent = students.reduce((a,s)=>a+s.points,0);
+  document.getElementById("completedCount").textContent = tasks.reduce((a,t)=>a+(t.completed||0),0);
+
+  const taskList = document.getElementById("taskList");
+  if(!tasks.length){
+    taskList.innerHTML = '<div class="empty">No tasks added yet.</div>';
+  } else {
+    taskList.innerHTML = tasks.map(t => `
+      <div class="task-item">
+        <div>
+          <span class="tag">${escapeHtml(t.group)}</span>
+          <h3>${escapeHtml(t.title)}</h3>
+          <p>${escapeHtml(t.description || "No description")} · ${t.points} points · Deadline: ${formatDate(t.deadline)}</p>
+        </div>
+        <button class="danger" onclick="deleteTask(${t.id})">Delete</button>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("recentTasks").innerHTML = tasks.slice(0,5).map(t => `
+    <div class="task-item">
+      <div><h3>${escapeHtml(t.title)}</h3><p>${escapeHtml(t.group)} · ${t.points} points</p></div>
+      <span class="tag">${formatDate(t.deadline)}</span>
+    </div>
+  `).join("") || '<div class="empty">No tasks yet.</div>';
+
+  const sorted = [...students].sort((a,b)=>b.points-a.points);
+  document.getElementById("leaderboardBody").innerHTML = sorted.map((s,i)=>`
+    <tr>
+      <td class="rank">#${i+1}</td>
+      <td><strong>${escapeHtml(s.name)}</strong></td>
+      <td>${escapeHtml(s.id)}</td>
+      <td>${escapeHtml(s.group)}</td>
+      <td class="points">${s.points}</td>
+      <td><button class="danger" onclick="deleteStudent('${escapeAttr(s.id)}')">Remove</button></td>
+    </tr>
+  `).join("") || '<tr><td colspan="6" class="empty">No students added yet.</td></tr>';
+}
+
+function formatDate(value){
+  if(!value) return "No deadline";
+  const d = new Date(value);
+  return isNaN(d) ? value : d.toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function escapeAttr(str){ return String(str).replace(/'/g,"\\'"); }
+
+loadSharedData();
+</script>
+</body>
+</html>

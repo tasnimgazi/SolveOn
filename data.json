@@ -1,0 +1,33 @@
+{
+  "students": [],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Java OOP Practice",
+      "group": "SWE 43_C",
+      "deadline": "",
+      "points": 10,
+      "description": "10 problems",
+      "completed": 0
+    },
+    {
+      "id": 2,
+      "title": "Watch today's class",
+      "group": "SWE 43_C",
+      "deadline": "",
+      "points": 20,
+      "description": "Backend Fundamentals",
+      "completed": 0
+    },
+    {
+      "id": 3,
+      "title": "Submit mini project",
+      "group": "SWE 43_C",
+      "deadline": "",
+      "points": 30,
+      "description": "Deadline · 11:59 PM",
+      "completed": 0
+    }
+  ],
+  "updatedAt": "2026-09-29T07:14:56.381Z"
+}

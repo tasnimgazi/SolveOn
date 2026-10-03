@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solveon </title>
+
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:light-dark(#f2fbff,#081722);
+  --surface:light-dark(#fff,#102431);
+  --surface2:light-dark(#f1fbff,#163140);
+  --text:light-dark(#102333,#f3fbff);
+  --muted:light-dark(#67808f,#a9c2ce);
+  --line:light-dark(#dceff6,#244555);
+  --brand:light-dark(#13b5e6,#19bde9);
+  --brand2:light-dark(#0877e8,#0d91df);
+  --green:#16a36b;
+  --gold:#d99b17;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,
+  BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+#app{
+  min-height:100vh;
+  background:var(--bg);
+}
+
+.container{
+  max-width:1120px;
+  margin:auto;
+  padding:28px 20px 50px;
+}
+
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:26px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font-weight:800;
+  font-size:21px;
+}
+
+.mark{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  background:linear-gradient(145deg,#08b7eb,#126be7);
+  display:grid;
+  place-items:center;
+  color:white;
+  font-weight:900;
+  box-shadow:0 8px 22px #08aee733;
+}
+
+.status{
+  font-size:13px;
+  color:var(--muted);
+  background:var(--surface);
+  border:1px solid var(--line);
+  padding:9px 13px;
+  border-radius:999px;
+}
+
+.hero{
+  background:linear-gradient(135deg,#12b8e8,#0877e8);
+  color:white;
+  border-radius:24px;
+  padding:28px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:25px;
+  box-shadow:0 18px 40px #08aee226;
+}
+
+.hero h1{
+  font-size:30px;
+  line-height:1.12;
+  margin:0 0 9px;
+}
+
+.hero p{
+  margin:0;
+  color:#e9faff;
+  max-width:620px;
+}
+
+.classBtn{
+  border:0;
+  background:white;
+  color:#0877d8;
+  font-weight:800;
+  padding:14px 19px;
+  border-radius:13px;
+  cursor:pointer;
+  white-space:nowrap;
+  box-shadow:0 8px 20px #11111120;
+}
+
+.classBtn:hover{
+  transform:translateY(-1px);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.45fr .85fr;
+  gap:20px;
+  margin-top:22px;
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+}
+
+.card h2{
+  font-size:18px;
+  margin:0;
+}
+
+.sub{
+  font-size:13px;
+  color:var(--muted);
+  margin:5px 0 18px;
+}
+
+.leader{
+  display:grid;
+  grid-template-columns:42px 1fr auto;
+  align-items:center;
+  gap:12px;
+  padding:13px 10px;
+  border-radius:14px;
+}
+
+.leader:nth-child(2){
+  background:var(--surface2);
+}
+
+.rank{
+  font-weight:800;
+  text-align:center;
+  color:var(--muted);
+}
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:light-dark(#e9e9ff,#2b2f50);
+  font-weight:800;
+}
+
+.person{
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.name{
+  font-weight:750;
+}
+
+.score{
+  font-weight:800;
+}
+
+.you{
+  font-size:11px;
+  color:var(--brand);
+  font-weight:800;
+  margin-left:5px;
+}
+
+.badge{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#eaf8f2;
+  color:var(--green);
+  margin-left:6px;
+}
+
+.tasks{
+  margin-top:20px;
+}
+
+.task{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:center;
+  padding:14px 0;
+  border-top:1px solid var(--line);
+}
+
+.task:first-of-type{
+  border-top:0;
+}
+
+.task small{
+  color:var(--muted);
+}
+
+.pill{
+  font-size:11px;
+  padding:6px 9px;
+  border-radius:999px;
+  background:var(--surface2);
+  color:var(--muted);
+  white-space:nowrap;
+}
+
+.open{
+  background:#eaf8f2;
+  color:var(--green);
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:#07101a88;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:10;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modalbox{
+  width:min(620px,100%);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:25px;
+  box-shadow:0 30px 80px #0005;
+}
+
+.modalhead{
+  display:flex;
+  justify-content:space-between;
+  align-items:start;
+}
+
+.close{
+  border:0;
+  background:var(--surface2);
+  color:var(--text);
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:18px;
+}
+
+.private{
+  margin:18px 0;
+  background:var(--surface2);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:17px;
+}
+
+.private b{
+  display:block;
+  margin-bottom:5px;
+}
+
+.join{
+  width:100%;
+  border:0;
+  background:var(--brand);
+  color:#fff;
+  padding:14px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.join:hover{
+  background:var(--brand2);
+}
+
+.note{
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+  margin-top:10px;
+}
+
+@media(max-width:760px){
+
+  .hero{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .container{
+    padding:18px 14px 35px;
+  }
+
+  .hero h1{
+    font-size:25px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<main class="container">
+
+<header class="top">
+
+  <div class="brand">
+    <div class="mark">S</div>
+    Solveon
+  </div>
+
+  <div class="status" id="syncStatus">
+    ● Live learning mode
+  </div>
+
+</header>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+  <div>
+
+    <h1>
+       We will grow together. 🤝
+    </h1>
+
+    <p>
+      Your classes, tasks and progress — all in one friendly place.
+      Stay consistent and move up the leaderboard.
+    </p>
+
+    
+  </div>
+
+  <button class="classBtn" onclick="openClass()">
+    🎓 Go to Classes
+  </button>
+
+</section>
+
+
+<!-- LEADERBOARD -->
+
+<div class="grid">
+
+<section class="card">
+
+  <h2>🏆 Leaderboard</h2>
+  <div class="sub">This week's learning points</div>
+  <div id="leaderboardList"></div>
+
+</section>
+
+<!-- TODAY'S TASKS -->
+
+<div class="card" style="margin-top:22px">
+
+  <h2>📚 Today's Tasks</h2>
+  <div class="sub">Tasks from your enrolled class</div>
+  <div class="tasks" id="taskList"></div>
+
+</div>
+</div>
+
+</main>
+
+</div>
+
+
+<!-- PRIVATE CLASS MODAL -->
+
+<div class="modal" id="modal">
+
+  <div class="modalbox">
+
+    <div class="modalhead">
+
+      <div>
+
+        <h2 style="margin:0">
+          🎓 SolveOn Classes
+        </h2>
+
+        <p class="sub">
+          Private group learning space
+        </p>
+
+      </div>
+
+      <button
+        class="close"
+        onclick="closeClass()"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="private">
+
+      <b>
+        🔒 Paid Private Group
+      </b>
+
+      <span style="color:var(--muted);font-size:13px">
+
+        Access your enrolled classes,
+        class materials and assigned tasks
+        from one place.
+
+      </span>
+
+    </div>
+
+
+    <div class="task">
+
+      <div>
+
+        <b>
+          Today's Class
+        </b>
+
+        <br>
+
+        <small>
+          Backend Fundamentals · Live Group Class
+        </small>
+
+      </div>
+
+      <span class="pill open">
+        Starting soon
+      </span>
+
+    </div>
+
+
+    <div class="task">
+
+      <div>
+
+        <b>
+          Class Task
+        </b>
+
+        <br>
+
+        <small>
+          Build a REST API endpoint
+        </small>
+
+      </div>
+
+      <span class="pill">
+        Due today
+      </span>
+
+    </div>
+
+
+    <button
+      class="join"
+      onclick="enterGroup()"
+    >
+      Enter Private Group Class →
+    </button>
+
+
+    <div class="note">
+      Demo button — connect this to your SolveOn
+      private-group URL.
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- Firebase Compatible SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD6F7Y16vDy20HAlP2NFTXsz37_o8l_VZQ",
+    authDomain: "solveon-a0cf4.firebaseapp.com",
+    projectId: "solveon-a0cf4",
+    storageBucket: "solveon-a0cf4.firebasestorage.app",
+    messagingSenderId: "662833382074",
+    appId: "1:662833382074:web:a409e20c8c2b34669d3883",
+    measurementId: "G-Z59CBFNBM7"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
+
+  function loadSolveOnData() {
+    db.collection("solveon").doc("mainData")
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (typeof renderLeaderboard === 'function') {
+            renderLeaderboard(Array.isArray(data.students) ? data.students : []);
+          }
+          if (typeof renderTasks === 'function') {
+            renderTasks(Array.isArray(data.tasks) ? data.tasks : []);
+          }
+          
+          const status = document.getElementById('syncStatus');
+          if (status) {
+            status.textContent = data.updatedAt 
+              ? '● Live • Updated ' + new Date(data.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+              : '● Live learning mode';
+          }
+        }
+      }, (error) => {
+        console.error("Firestore error:", error);
+      });
+  }
+
+  loadSolveOnData();
+</script>
+</html>
+  }catch(error){
+    document.getElementById('leaderboardList').innerHTML = '<div class="sub">Leaderboard is temporarily unavailable. Make sure <b>data.json</b> is beside index.html.</div>';
+    document.getElementById('taskList').innerHTML = '<div class="sub">Tasks are temporarily unavailable. Make sure <b>data.json</b> is beside index.html.</div>';
+    const status = document.getElementById('syncStatus');
+    if(status) status.textContent = '● Offline / data unavailable';
+    console.error(error);
+  }
+}
+
+function initials(name){
+  return name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c]));
+}
+
+function renderLeaderboard(students){
+  const list=[...students].sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0));
+  document.getElementById('leaderboardList').innerHTML = list.length ? list.map((s,i)=>`
+    <div class="leader">
+      <div class="rank">${i+1}</div>
+      <div class="person">
+        <div class="avatar">${initials(s.name)}</div>
+        <div><div class="name">${escapeHtml(s.name)}</div><small>${Number(s.completed)||0} tasks completed</small></div>
+      </div>
+      <div class="score">${Number(s.points)||0}</div>
+    </div>`).join('') : '<div class="sub">No leaderboard data yet.</div>';
+}
+
+function renderTasks(tasks){
+  document.getElementById('taskList').innerHTML = tasks.length ? tasks.map((t,i)=>`
+    <div class="task">
+      <div><b>${escapeHtml(t.title)}</b><br><small>${escapeHtml(t.description || t.group || '')}</small></div>
+      <span class="pill ${i===0 ? 'open' : ''}">${i===0 ? 'Open' : ((Number(t.points)||0)+' pts')}</span>
+    </div>`).join('') : '<div class="sub">No tasks available yet.</div>';
+}
+
+loadSolveOnData();
+setInterval(loadSolveOnData, 15000);
+
+function openClass(){
+
+  document
+    .getElementById('modal')
+    .classList
+    .add('show');
+
+}
+
+
+function closeClass(){
+
+  document
+    .getElementById('modal')
+    .classList
+    .remove('show');
+
+}
+
+
+function enterGroup(){
+
+  alert(
+    'Private SolveOn group link will open here. Replace this action with your paid-group URL.'
+  );
+
+}
+
+
+document
+  .getElementById('modal')
+  .addEventListener('click',e=>{
+
+    if(e.target.id==='modal'){
+      closeClass();
+    }
+
+  });
+
+</script>
+
+</body>
+</html>
